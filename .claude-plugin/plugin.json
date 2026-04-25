@@ -1,7 +1,7 @@
 {
   "name": "effort-suggest",
   "description": "Suggests /effort level switches based on prompt task type. Regex tiers + LLM fallback (Haiku) with hash-cache.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Philip Chen",
     "url": "https://github.com/lsps9150414"

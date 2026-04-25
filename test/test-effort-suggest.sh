@@ -10,6 +10,7 @@ export EFFORT_SUGGEST_LLM_OFF=1
 TEST_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCRIPT="${TEST_SCRIPT:-$TEST_DIR/../hooks/effort-suggest.sh}"
 FIXTURES_DIR="${TEST_FIXTURES:-$TEST_DIR/fixtures}"
+export CLAUDE_PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$TEST_DIR/..}"
 PASS=0
 FAIL=0
 
@@ -60,7 +61,7 @@ run_test_4a_low_tier() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=high "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: low"*) echo "PASS: test_4a_low_tier"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `low`'*) echo "PASS: test_4a_low_tier"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_4a_low_tier"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -72,7 +73,7 @@ run_test_4b_high_tier() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=low "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: high"*) echo "PASS: test_4b_high_tier"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `high`'*) echo "PASS: test_4b_high_tier"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_4b_high_tier"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -83,7 +84,7 @@ run_test_4c_xhigh_tier() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=low "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: xhigh"*) echo "PASS: test_4c_xhigh_tier"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `xhigh`'*) echo "PASS: test_4c_xhigh_tier"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_4c_xhigh_tier"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -112,7 +113,7 @@ run_test_6_cooldown() {
   out1=$(EFFORT_SUGGEST_CURRENT=high echo "$payload" | EFFORT_SUGGEST_CURRENT=high "$SCRIPT" 2>/dev/null)
   ctx1=$(echo "$out1" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx1" in
-    *"Suggest: low"*) ;;
+    *'Suggest**: `low`'*) ;;
     *) echo "FAIL: test_6_cooldown (first fire missing)"; FAIL=$((FAIL + 1)); return ;;
   esac
   # Second fire same session same suggestion within cooldown — expect silent.
@@ -130,7 +131,7 @@ run_test_7_session_reset() {
   out=$(EFFORT_SUGGEST_CURRENT=high echo "$payload_b" | EFFORT_SUGGEST_CURRENT=high "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: low"*) echo "PASS: test_7_session_reset"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `low`'*) echo "PASS: test_7_session_reset"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_7_session_reset"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -158,7 +159,7 @@ EOF
   out=$(EFFORT_SUGGEST_CURRENT=low echo "$payload" | EFFORT_SUGGEST_CURRENT=low "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: high"*) echo "PASS: test_8_project_override"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `high`'*) echo "PASS: test_8_project_override"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_8_project_override"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
   rm -rf "$fixture_dir"
@@ -182,7 +183,7 @@ run_test_9a_malformed_project_config() {
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   if [ "$exit_code" = "0" ]; then
     case "$ctx" in
-      *"Suggest: high"*) echo "PASS: test_9a_malformed_project_config"; PASS=$((PASS + 1)) ;;
+      *'Suggest**: `high`'*) echo "PASS: test_9a_malformed_project_config"; PASS=$((PASS + 1)) ;;
       *) echo "FAIL: test_9a_malformed_project_config (no suggestion)"; FAIL=$((FAIL + 1)) ;;
     esac
   else
@@ -222,7 +223,7 @@ run_test_10a_summarize_low() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=high "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: low"*) echo "PASS: test_10a_summarize_low"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `low`'*) echo "PASS: test_10a_summarize_low"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_10a_summarize_low"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -234,7 +235,7 @@ run_test_10b_redesign_high() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=low "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: high"*) echo "PASS: test_10b_redesign_high"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `high`'*) echo "PASS: test_10b_redesign_high"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_10b_redesign_high"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -246,7 +247,7 @@ run_test_10c_system_design_xhigh() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=low "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: xhigh"*) echo "PASS: test_10c_system_design_xhigh"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `xhigh`'*) echo "PASS: test_10c_system_design_xhigh"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_10c_system_design_xhigh"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -258,7 +259,7 @@ run_test_10d_explain_file_low() {
   out=$(echo "$payload" | EFFORT_SUGGEST_CURRENT=high "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: low"*) echo "PASS: test_10d_explain_file_low"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `low`'*) echo "PASS: test_10d_explain_file_low"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_10d_explain_file_low"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -276,7 +277,7 @@ run_test_11a_llm_returns_low() {
   out=$(_run_with_fake_claude "$FIXTURES_DIR/fake-claude-low" "$payload")
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: low"*"(LLM)"*) echo "PASS: test_11a_llm_returns_low"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `low`'*"(LLM)"*) echo "PASS: test_11a_llm_returns_low"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_11a_llm_returns_low"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }
@@ -293,7 +294,7 @@ run_test_11b_llm_cache_hit() {
   out=$(echo "$payload" | env -u EFFORT_SUGGEST_LLM_OFF EFFORT_SUGGEST_CURRENT=low PATH="$FIXTURES_DIR/fake-claude-low:$PATH" "$SCRIPT" 2>/dev/null)
   ctx=$(echo "$out" | jq -r '.hookSpecificOutput.additionalContext // ""')
   case "$ctx" in
-    *"Suggest: high"*"(LLM cache)"*) echo "PASS: test_11b_llm_cache_hit"; PASS=$((PASS + 1)) ;;
+    *'Suggest**: `high`'*"(LLM cache)"*) echo "PASS: test_11b_llm_cache_hit"; PASS=$((PASS + 1)) ;;
     *) echo "FAIL: test_11b_llm_cache_hit"; echo "  ctx: $ctx"; FAIL=$((FAIL + 1)) ;;
   esac
 }

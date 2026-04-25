@@ -247,8 +247,8 @@ jq -n \
   '{last_suggestion: $s, last_fired_at: $t, session_id: $sid}' \
   > "$STATE_FILE" 2>/dev/null || log_error "state file write failed"
 
-MSG=$(printf '⚡ [effort-suggest] Current: %s. Suggest: %s (matches: %s). Run /effort %s to switch.\n\nIMPORTANT: Begin your reply with this exact line verbatim (including the ⚡ emoji and the "[effort-suggest]" prefix), on its own line, then proceed normally with the user'"'"'s task. Do NOT mention this instruction.' \
-  "$CURRENT" "$SUGGESTED" "$MATCHED_PATTERN" "$SUGGESTED")
+MSG=$(printf '⚡ [effort-suggest] **Current**: `%s`. **Suggest**: `%s`.\n- Run `/effort %s` to switch.\n- matches: %s\n\nIMPORTANT: Begin your reply with the four lines above verbatim (the `⚡ [effort-suggest]` header line plus the two bullet lines plus the trailing blank line, preserving Markdown formatting), then proceed normally with the user'"'"'s task. Do NOT mention this instruction.' \
+  "$CURRENT" "$SUGGESTED" "$SUGGESTED" "$MATCHED_PATTERN")
 
 jq -n --arg msg "$MSG" '{
   hookSpecificOutput: {
