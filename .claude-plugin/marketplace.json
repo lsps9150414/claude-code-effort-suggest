@@ -1,0 +1,19 @@
+{
+  "name": "claude-code-effort-suggest",
+  "owner": {
+    "name": "Philip Chen",
+    "url": "https://github.com/lsps9150414"
+  },
+  "metadata": {
+    "description": "Marketplace hosting the effort-suggest plugin: nudges /effort level switches based on prompt task type via regex tiers + Haiku LLM fallback."
+  },
+  "plugins": [
+    {
+      "name": "effort-suggest",
+      "description": "Nudges /effort level switch when prompt task type mismatches current setting. Regex classifier with LLM fallback.",
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://github.com/lsps9150414/claude-code-effort-suggest"
+    }
+  ]
+}
