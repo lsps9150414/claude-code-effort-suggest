@@ -28,14 +28,14 @@ Always exits 0. Non-blocking. Degrades silent on every error path. Cache + coold
 
 ```bash
 claude plugin marketplace add lsps9150414/claude-code-effort-suggest
-claude plugin install effort-suggest@claude-code-effort-suggest
+claude plugin install effort-suggest@lsps9150414
 ```
 
 Restart any open Claude Code sessions. The hook fires automatically on every prompt.
 
 To update later:
 ```bash
-claude plugin marketplace update claude-code-effort-suggest
+claude plugin marketplace update lsps9150414
 claude plugin update effort-suggest
 ```
 
@@ -155,7 +155,7 @@ cd <plugin-source-dir>
 
 ```bash
 claude plugin uninstall effort-suggest
-claude plugin marketplace remove claude-code-effort-suggest
+claude plugin marketplace remove lsps9150414
 ```
 
 Then optionally clean runtime cache:
