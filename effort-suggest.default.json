@@ -1,0 +1,62 @@
+{
+  "tiers": {
+    "xhigh": [
+      "\\b(architecture|architectural)\\b",
+      "\\bsecurity audit\\b",
+      "\\b(concurrency|deadlock|race condition)\\b",
+      "\\bperf(ormance)? (bottleneck|root cause)\\b",
+      "\\bnew rule (file|taxonomy)\\b",
+      "\\bmonorepo restructure\\b",
+      "\\bdesign (the |a )?(system|architecture|platform)\\b",
+      "\\b(new|whole|entire) (system|service|platform) design\\b",
+      "\\bsystem-?wide refactor\\b"
+    ],
+    "high": [
+      "\\brefactor\\b",
+      "\\.agents/rules\\b",
+      "\\brule file\\b",
+      "\\bdebug(ging)?\\b",
+      "\\bmigration\\b",
+      "\\b(design|spec) (the|a|new)\\b",
+      "\\bcross-(package|module|cutting)\\b",
+      "\\b(code )?review\\b",
+      "\\bredesign\\b",
+      "\\bimplement (the |a )?(system|service|module|subsystem|feature)\\b",
+      "\\bbuild (the |a )?(new|entire)\\b",
+      "\\bmodule (boundary|isolation|interface)\\b",
+      "\\bextract (this |the )?(function|method|class|module|component)\\b",
+      "\\b(restructure|reorganize)\\b",
+      "\\b(audit|harden) (the |a )?(security|auth|api)\\b"
+    ],
+    "low": [
+      "\\btypo\\b",
+      "\\brename\\b",
+      "\\b(format|prettier|lint fix)\\b",
+      "\\bfix import(s)?\\b",
+      "\\b(add|update) (a )?comment\\b",
+      "\\b(update|fix) (a )?doc\\b",
+      "\\bdelete (the |a )?file\\b",
+      "\\b(simple|trivial) (bug )?fix\\b",
+      "\\bsummariz(e|ing|ed)\\b",
+      "\\bexplain (this|that|the (file|function|class|method)|how)\\b",
+      "\\bdescribe (this|that|the (file|function|class))\\b",
+      "\\bshow me\\b",
+      "\\bwhat does (this|that|it)\\b",
+      "\\blist (the|all|every)\\b",
+      "\\binspect (the|this|that)\\b",
+      "\\bread (the|this) (file|function|module)\\b",
+      "\\b(rename|move|delete) (the |a )?(file|folder|directory|var|variable|param|parameter)\\b",
+      "\\b(add|update|fix) (the |a )?(comment|jsdoc|docstring|readme|changelog)\\b",
+      "\\bregenerate\\b"
+    ]
+  },
+  "cooldown_seconds": 300,
+  "min_prompt_length": 20,
+  "llm": {
+    "enabled": true,
+    "min_prompt_length": 30,
+    "timeout_seconds": 4,
+    "model": "claude-haiku-4-5-20251001",
+    "cache_max_entries": 1000
+  }
+}
