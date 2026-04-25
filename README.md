@@ -1,6 +1,6 @@
 # claude-code-effort-suggest
 
-A `UserPromptSubmit` hook for [Claude Code](https://claude.com/claude-code) that nudges you to switch the session's `effortLevel` when the upcoming prompt's task type doesn't match the current setting.
+A `UserPromptSubmit` plugin for [Claude Code](https://claude.com/claude-code) that nudges you to switch the session's `effortLevel` when the upcoming prompt's task type doesn't match the current setting.
 
 Catches the common tax of running trivial lookups on `xhigh` (slow, expensive) or architecture decisions on `low` (under-thinking).
 
@@ -26,17 +26,18 @@ Always exits 0. Non-blocking. Degrades silent on every error path. Cache + coold
 
 ## Install
 
-```bash
-git clone https://github.com/lsps9150414/claude-code-effort-suggest.git
-cd claude-code-effort-suggest
-./install.sh
 ```
+/plugin install lsps9150414/claude-code-effort-suggest
+```
+
+(Or pass the full git URL if your CC version requires it.)
 
 Restart any open Claude Code sessions. The hook fires automatically on every prompt.
 
 **Requirements:**
+- Claude Code with plugin support
 - macOS or Linux with `bash` 3.2+, `jq`, `perl`, `shasum`
-- For LLM fallback: [Claude Code CLI](https://claude.com/claude-code) installed (`claude` command on `$PATH`)
+- For LLM fallback: `claude` CLI on `$PATH` (the same CLI you used to install the plugin)
 
 ## Tiers
 
@@ -47,7 +48,7 @@ Restart any open Claude Code sessions. The hook fires automatically on every pro
 | `high` | Refactors, debugging, code review, migrations | `refactor the auth middleware`, `debug this race condition` |
 | `xhigh` | Architecture, security audits, perf root cause | `design the system for ...`, `architecture review` |
 
-Default config has ~43 patterns across these tiers. Tunable per-project; LLM fallback handles the long tail.
+Default config has ~43 patterns. Tunable per-project; LLM fallback handles the long tail.
 
 ## Suppression
 
@@ -56,12 +57,31 @@ Default config has ~43 patterns across these tiers. Tunable per-project; LLM fal
 | `EFFORT_SUGGEST_OFF=1` env | Disable hook entirely |
 | `EFFORT_SUGGEST_LLM_OFF=1` env | Regex-only mode, skip LLM fallback |
 | `[no-suggest]` token in prompt | Skip per-prompt |
-| Prompt < 20 chars | Auto-skip (catches "yes", "continue") |
+| Prompt < 20 chars | Auto-skip |
 | Cooldown (5 min default) | Don't nudge twice for same suggestion in window |
 
 ## Configuration
 
-Default at `~/.claude/effort-suggest.json`:
+Three layers (highest precedence first):
+
+1. **Per-project**: `<project>/.claude/effort-suggest.json` — appended to tier arrays of base; scalars and `llm.*` override.
+2. **User global**: `~/.claude/effort-suggest.json` — replaces plugin defaults entirely if present. Drop a copy of [effort-suggest.json](effort-suggest.json) here to start.
+3. **Plugin defaults**: shipped at `$CLAUDE_PLUGIN_ROOT/effort-suggest.json`. Always available.
+
+Example per-project override:
+
+```json
+{
+  "tiers": {
+    "high": ["\\bmy-repo-specific-pattern\\b"]
+  },
+  "llm": {
+    "enabled": false
+  }
+}
+```
+
+Default config schema:
 
 ```json
 {
@@ -82,56 +102,24 @@ Default at `~/.claude/effort-suggest.json`:
 }
 ```
 
-### Per-project overrides
-
-Drop a `<project>/.claude/effort-suggest.json` to add patterns. Tier arrays are **appended** to defaults; `cooldown_seconds`, `min_prompt_length`, and `llm.*` scalars override.
-
-```json
-{
-  "tiers": {
-    "high": ["\\bmy-repo-specific-pattern\\b"]
-  },
-  "llm": {
-    "enabled": false
-  }
-}
-```
-
-## Files installed
+## Runtime files
 
 ```
-~/.claude/
-├── hooks/
-│   └── effort-suggest.sh                   # main hook
-├── effort-suggest.json                      # default config
-├── settings.json                            # UserPromptSubmit registration added
-└── cache/                                   # runtime (auto-created)
-    ├── effort-suggest.state                 # cooldown state
-    ├── effort-suggest.llm-cache.json        # LLM tier cache (LRU bounded)
-    └── effort-suggest.error.log             # silent-degrade log
+~/.claude/cache/                              (auto-created)
+├── effort-suggest.state                      # cooldown state
+├── effort-suggest.llm-cache.json             # LLM tier cache (LRU bounded)
+└── effort-suggest.error.log                  # silent-degrade log
 ```
 
 ## Tests
 
 ```bash
+cd <plugin-source-dir>
 ./test/test-effort-suggest.sh
 # Expect: PASS: 27   FAIL: 0
 ```
 
 27 fixture tests cover suppression, tier hits, comparison, cooldown, session reset, project merge, malformed config, LLM mock paths (cache hit/miss/timeout/garbage/short-skip), and cache eviction. Mock `claude` CLI scripts under `test/fixtures/*/claude` make tests deterministic and offline.
-
-## Manual smoke
-
-```bash
-# Regex hit (low tier, no LLM)
-echo '{"session_id":"m1","cwd":"/tmp","hook_event_name":"UserPromptSubmit","prompt":"summarize @foo.md please"}' \
-  | EFFORT_SUGGEST_CURRENT=high ~/.claude/hooks/effort-suggest.sh | jq -r '.hookSpecificOutput.additionalContext'
-
-# LLM fallback (real Haiku call, ~1-3s, then cached)
-rm -f ~/.claude/cache/effort-suggest.llm-cache.json
-echo '{"session_id":"m2","cwd":"/tmp","hook_event_name":"UserPromptSubmit","prompt":"please tidy up the variable names in this snippet of code"}' \
-  | env -u EFFORT_SUGGEST_LLM_OFF EFFORT_SUGGEST_CURRENT=high ~/.claude/hooks/effort-suggest.sh | jq -r '.hookSpecificOutput.additionalContext'
-```
 
 ## Architecture notes
 
@@ -142,13 +130,31 @@ echo '{"session_id":"m2","cwd":"/tmp","hook_event_name":"UserPromptSubmit","prom
 - **LRU eviction** at 90% of `cache_max_entries` (default keeps last 900 of 1000).
 - **Timeout** via `perl -e 'alarm shift; exec @ARGV'` — portable across macOS (no `timeout` by default) and Linux.
 
+## Plugin layout
+
+```
+.
+├── .claude-plugin/plugin.json    # plugin manifest
+├── hooks/
+│   ├── hooks.json                # UserPromptSubmit binding
+│   └── effort-suggest.sh         # hook script
+├── effort-suggest.json           # default config
+├── test/
+│   ├── test-effort-suggest.sh    # 27 fixture tests
+│   └── fixtures/                 # mock `claude` CLI per scenario
+├── LICENSE
+└── README.md
+```
+
 ## Uninstall
 
+```
+/plugin uninstall effort-suggest
+```
+
+Then optionally clean runtime cache:
 ```bash
-rm ~/.claude/hooks/effort-suggest.sh
-rm ~/.claude/effort-suggest.json
 rm ~/.claude/cache/effort-suggest.{state,llm-cache.json,error.log}
-jq 'del(.hooks.UserPromptSubmit)' ~/.claude/settings.json > /tmp/s && mv /tmp/s ~/.claude/settings.json
 ```
 
 ## License

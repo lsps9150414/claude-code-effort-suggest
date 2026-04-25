@@ -1,9 +1,22 @@
 #!/bin/bash
 # UserPromptSubmit hook: suggest /effort switch when prompt task type mismatches current effortLevel.
-# Non-blocking. Always exits 0. See ~/.claude/effort-suggest.json for patterns.
+# Non-blocking. Always exits 0.
+#
+# Config resolution (highest precedence first):
+#   1. <cwd>/.claude/effort-suggest.json  (per-project overrides, deep-merged)
+#   2. $HOME/.claude/effort-suggest.json  (user global overrides, if present)
+#   3. $CLAUDE_PLUGIN_ROOT/effort-suggest.json  (plugin defaults)
 set -u
 
-CONFIG="$HOME/.claude/effort-suggest.json"
+# Base config: user global ($HOME) takes precedence over plugin default ($CLAUDE_PLUGIN_ROOT).
+# Per-project (<cwd>/.claude/effort-suggest.json) is deep-merged on top of base by build_merged_config.
+if [ -f "$HOME/.claude/effort-suggest.json" ]; then
+  CONFIG="$HOME/.claude/effort-suggest.json"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$CLAUDE_PLUGIN_ROOT/effort-suggest.json" ]; then
+  CONFIG="$CLAUDE_PLUGIN_ROOT/effort-suggest.json"
+else
+  CONFIG=""
+fi
 ERROR_LOG="$HOME/.claude/cache/effort-suggest.error.log"
 LLM_CACHE_FILE="$HOME/.claude/cache/effort-suggest.llm-cache.json"
 
